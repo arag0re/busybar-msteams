@@ -13,6 +13,7 @@ STATIC_DISPLAY_PRIORITY = 100
 COLORS = {
     ScreenMode.ON_CALL: ("#B00020FF", "#FFFFFFFF"),
     ScreenMode.LUNCH: ("#B85C00FF", "#FFFFFFFF"),
+    ScreenMode.MEETING: ("#0067B8FF", "#FFFFFFFF"),
     ScreenMode.UPCOMING: ("#0067B8FF", "#FFFFFFFF"),
     ScreenMode.IDLE: ("#123524FF", "#FFFFFFFF"),
     ScreenMode.ERROR: ("#7A2400FF", "#FFFFFFFF"),
@@ -32,6 +33,10 @@ def build_payload(state: ScreenState, now: datetime) -> types.DisplayElements:
         front = "LUNCH"
         title = "LUNCH BREAK"
         detail = "Enjoy your break"
+    elif state.mode is ScreenMode.MEETING:
+        front = "MEETING"
+        title = "SCHEDULED MEETING"
+        detail = "Calendar event in progress"
     elif state.mode is ScreenMode.UPCOMING and state.meeting:
         countdown = format_countdown(state.meeting.start, now)
         front = f"NEXT {countdown}"
@@ -68,6 +73,17 @@ def build_payload(state: ScreenState, now: datetime) -> types.DisplayElements:
                 id="front-lunch-animation",
                 type="animation",
                 stock_path="shared/lunch_72x16.anim",
+                section="loop",
+                loop=True,
+                display=types.DisplayName.FRONT,
+            )
+        )
+    elif state.mode is ScreenMode.MEETING:
+        elements.append(
+            types.AnimationElement(
+                id="front-meeting-animation",
+                type="animation",
+                stock_path="shared/meeting_72x16.anim",
                 section="loop",
                 loop=True,
                 display=types.DisplayName.FRONT,
@@ -159,7 +175,7 @@ def build_payload(state: ScreenState, now: datetime) -> types.DisplayElements:
         application_name=APP_NAME,
         priority=(
             ANIMATION_PRIORITY
-            if on_call or state.mode is ScreenMode.LUNCH
+            if on_call or state.mode in {ScreenMode.LUNCH, ScreenMode.MEETING}
             else STATIC_DISPLAY_PRIORITY
         ),
         led_notification_color=background,

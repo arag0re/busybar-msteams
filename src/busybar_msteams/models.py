@@ -9,6 +9,7 @@ from enum import StrEnum
 class ScreenMode(StrEnum):
     ON_CALL = "on_call"
     LUNCH = "lunch"
+    MEETING = "meeting"
     UPCOMING = "upcoming"
     IDLE = "idle"
     ERROR = "error"
@@ -107,8 +108,12 @@ def build_screen_state(
         )
         if lunch_event:
             return ScreenState(ScreenMode.LUNCH, meeting=lunch_event, presence=presence)
-    # A meeting in progress is not worth announcing on its own: it often ends
-    # early, so the useful information is always what comes next.
+    current_event = [
+        event for event in meetings if event.start <= now < event.end
+    ]
+    if current_event:
+        event = min(current_event, key=lambda item: item.end)
+        return ScreenState(ScreenMode.MEETING, meeting=event, presence=presence)
     upcoming = next_meeting(meetings, now)
     if upcoming:
         return ScreenState(ScreenMode.UPCOMING, meeting=upcoming, presence=presence)

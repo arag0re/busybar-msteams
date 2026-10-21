@@ -36,11 +36,12 @@ def test_presenting_is_on_call_but_calendar_in_meeting_is_not() -> None:
     assert not TeamsPresence("Busy", "InAMeeting").is_on_call
 
 
-def test_scheduled_meeting_does_not_claim_user_is_on_call() -> None:
+def test_scheduled_meeting_shows_meeting_mode_without_live_call() -> None:
     state = build_screen_state(
         [meeting(-0.5, 0.5)], TeamsPresence("Busy", "InAMeeting"), NOW
     )
-    assert state.mode is ScreenMode.IDLE
+    assert state.mode is ScreenMode.MEETING
+    assert state.meeting is not None
 
 
 def test_matching_current_lunch_blocker_shows_lunch_mode() -> None:
@@ -123,14 +124,14 @@ def test_live_call_takes_priority_over_lunch_blocker() -> None:
     assert state.mode is ScreenMode.ON_CALL
 
 
-def test_meeting_in_progress_is_skipped_for_the_next_one() -> None:
+def test_current_calendar_meeting_takes_priority_over_upcoming_countdown() -> None:
     state = build_screen_state(
         [meeting(-0.5, 0.5), meeting(2, 3)],
         TeamsPresence("Available", "Available"),
         NOW,
     )
-    assert state.mode is ScreenMode.UPCOMING
-    assert state.meeting and state.meeting.start == NOW + timedelta(hours=2)
+    assert state.mode is ScreenMode.MEETING
+    assert state.meeting and state.meeting.start == NOW - timedelta(hours=0.5)
 
 
 def test_next_meeting_and_hours_are_selected() -> None:

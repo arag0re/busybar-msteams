@@ -116,14 +116,15 @@ prompts for it at startup. The value is used for that run only and is not saved.
 | --- | --- | --- |
 | Live call or presenting | Stock animated `ON CALL` screen with microphone | Do not disturb |
 | Current matching lunch blocker | Stock animated `LUNCH` screen | Lunch |
+| Current calendar event without a live call | Stock animated `MEETING` screen | Scheduled meeting |
 | Teams meeting an hour or more away | `NEXT 1.3h` in blue | Hours until start |
 | Teams meeting under an hour away | `NEXT 5:30` in blue | Minutes and seconds until start |
 | No Teams meetings in the next 7 days | `NO CALLS` | Idle |
 
-A meeting already in progress is not shown on its own; meetings often end
-early, so the countdown always points at the next one that has not started.
-The on-call sign uses the BUSY Bar's built-in `on_call_72x16.anim` firmware
-asset, so the animation itself runs on the bar.
+When a calendar event is in progress and no live call or matching lunch blocker
+takes priority, the bar uses the built-in `meeting_72x16.anim` firmware asset.
+Upcoming Teams meetings continue to show a countdown. The on-call and lunch
+screens also use their built-in firmware animations.
 
 Within the final hour the screen redraws every second so the `MM:SS` countdown
 ticks. This is a local redraw only — Microsoft Graph stays on the polling

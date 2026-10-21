@@ -67,3 +67,27 @@ def test_lunch_payload_uses_stock_firmware_animation() -> None:
     assert animation["stock_path"] == "shared/lunch_72x16.anim"
     assert animation["section"] == "loop"
     assert animation["loop"] is True
+
+
+def test_scheduled_meeting_payload_uses_stock_firmware_animation() -> None:
+    now = datetime(2026, 8, 3, 10, tzinfo=UTC)
+    state = ScreenState(
+        ScreenMode.MEETING,
+        meeting=Meeting(
+            "meeting",
+            "Architecture review",
+            now - timedelta(minutes=5),
+            now + timedelta(minutes=25),
+        ),
+    )
+    payload = build_payload(state, now).model_dump()
+    assert payload["priority"] == ANIMATION_PRIORITY
+    animation = next(
+        element
+        for element in payload["elements"]
+        if element.get("type") == "animation"
+    )
+    assert animation["id"] == "front-meeting-animation"
+    assert animation["stock_path"] == "shared/meeting_72x16.anim"
+    assert animation["section"] == "loop"
+    assert animation["loop"] is True
