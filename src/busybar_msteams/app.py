@@ -164,9 +164,13 @@ def _run_device(graph: GraphClient, config: AppConfig, stop_event: Event) -> Non
 
                 if config.once:
                     break
-                # Redraw every second while the MM:SS countdown is on screen so it
-                # ticks; Graph itself stays on its own slower refresh schedule.
-                delay = 1.0 if _is_ticking(state, now) else config.poll_seconds
+                # Redraw once a second for the on-call animation and ticking
+                # countdown; Graph stays on its own slower refresh schedule.
+                delay = (
+                    1.0
+                    if state.mode is ScreenMode.ON_CALL or _is_ticking(state, now)
+                    else config.poll_seconds
+                )
                 delay = max(delay, retry_after)
                 retry_after = 0.0
                 stop_event.wait(delay)

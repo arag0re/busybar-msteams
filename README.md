@@ -114,13 +114,15 @@ prompts for it at startup. The value is used for that run only and is not saved.
 
 | Teams state | Front display | Meaning |
 | --- | --- | --- |
-| Live call or presenting | `ON CALL` in red | Do not disturb |
+| Live call or presenting | Animated red/amber dot-matrix `ON CALL` screen with a microphone | Do not disturb |
 | Teams meeting an hour or more away | `NEXT 1.3h` in blue | Hours until start |
 | Teams meeting under an hour away | `NEXT 5:30` in blue | Minutes and seconds until start |
 | No Teams meetings in the next 7 days | `NO CALLS` | Idle |
 
 A meeting already in progress is not shown on its own; meetings often end
 early, so the countdown always points at the next one that has not started.
+The animated on-call sign recreates the firmware screen in this app; it does
+not switch the BUSY Bar into a separate native firmware mode.
 
 Within the final hour the screen redraws every second so the `MM:SS` countdown
 ticks. This is a local redraw only — Microsoft Graph stays on the polling
