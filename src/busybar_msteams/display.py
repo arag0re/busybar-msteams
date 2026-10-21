@@ -7,7 +7,8 @@ from busylib import types
 from busybar_msteams.models import ScreenMode, ScreenState, format_countdown
 
 APP_NAME = "busybar-msteams"
-DISPLAY_PRIORITY = 90
+ANIMATION_PRIORITY = 90
+STATIC_DISPLAY_PRIORITY = 100
 
 COLORS = {
     ScreenMode.ON_CALL: ("#B00020FF", "#FFFFFFFF"),
@@ -156,7 +157,11 @@ def build_payload(state: ScreenState, now: datetime) -> types.DisplayElements:
     )
     return types.DisplayElements(
         application_name=APP_NAME,
-        priority=DISPLAY_PRIORITY,
+        priority=(
+            ANIMATION_PRIORITY
+            if on_call or state.mode is ScreenMode.LUNCH
+            else STATIC_DISPLAY_PRIORITY
+        ),
         led_notification_color=background,
         elements=elements,
     )

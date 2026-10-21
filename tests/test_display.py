@@ -1,6 +1,10 @@
 from datetime import UTC, datetime, timedelta
 
-from busybar_msteams.display import DISPLAY_PRIORITY, build_payload
+from busybar_msteams.display import (
+    ANIMATION_PRIORITY,
+    STATIC_DISPLAY_PRIORITY,
+    build_payload,
+)
 from busybar_msteams.models import Meeting, ScreenMode, ScreenState, TeamsPresence
 
 
@@ -12,7 +16,7 @@ def test_on_call_payload_uses_stock_firmware_animation() -> None:
     )
     payload = build_payload(state, now)
     dumped = payload.model_dump()
-    assert dumped["priority"] == DISPLAY_PRIORITY == 90
+    assert dumped["priority"] == ANIMATION_PRIORITY
     assert dumped["led_notification_color"] == "#B00020FF"
     animation = next(
         element
@@ -38,7 +42,7 @@ def test_upcoming_payload_displays_countdown_in_hours() -> None:
         presence=TeamsPresence("Available", "Available"),
     )
     payload = build_payload(state, now).model_dump()
-    assert payload["priority"] == DISPLAY_PRIORITY
+    assert payload["priority"] == STATIC_DISPLAY_PRIORITY
     assert any(element.get("text") == "NEXT 2.1h" for element in payload["elements"])
 
 
@@ -54,6 +58,7 @@ def test_lunch_payload_uses_stock_firmware_animation() -> None:
         ),
     )
     payload = build_payload(state, datetime(2026, 8, 3, 10, tzinfo=UTC)).model_dump()
+    assert payload["priority"] == ANIMATION_PRIORITY
     animation = next(
         element
         for element in payload["elements"]
