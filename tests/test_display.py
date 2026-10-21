@@ -3,6 +3,8 @@ import struct
 
 from busybar_msteams.countdown_animation import (
     ANIMATION_FILENAME,
+    FRAME_COUNT,
+    _frame,
     build_countdown_animation,
 )
 from busybar_msteams.display import (
@@ -108,6 +110,21 @@ def test_countdown_animation_is_native_72_by_16_loop() -> None:
 
     assert offset == len(animation)
     assert total_duration == 45
+
+
+def test_countdown_animation_wraparound_is_continuous() -> None:
+    first = _frame(0)
+    next_frame = _frame(1)
+    last = _frame(FRAME_COUNT - 1)
+    looped_first = _frame(FRAME_COUNT)
+
+    assert looped_first == first
+    assert next_frame != first
+    frame_changes = [
+        sum(abs(a - b) for a, b in zip(_frame(index), _frame(index + 1)))
+        for index in range(FRAME_COUNT)
+    ]
+    assert min(frame_changes[:-1]) <= frame_changes[-1] <= max(frame_changes[:-1])
 
 
 def test_lunch_payload_uses_stock_firmware_animation() -> None:

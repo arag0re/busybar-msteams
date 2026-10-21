@@ -17,32 +17,36 @@ ANIMATION_FILENAME = "upcoming_countdown.anim"
 _BASE = (4, 16, 48)
 _ACCENT = (35, 100, 245)
 _EFFECT_RANK = 4
-_SPEED = 1.4
 _MAX_BLOCKS = 127
 
 
 def _frame(frame_index: int) -> bytes:
-    t = frame_index / FPS
-    phase = t * _SPEED
+    phase = (frame_index % FRAME_COUNT) / FRAME_COUNT
     pixels = bytearray(WIDTH * HEIGHT * 4)
     for y in range(HEIGHT):
         edge = (abs(y - 7.5) / 7.5) ** 1.6
         field = 0.38 + 0.62 * edge
         for x in range(WIDTH):
-            wave = 0.5 + 0.5 * math.sin(x * 0.085 - phase * 2 + y * 0.18)
+            wave = 0.5 + 0.5 * math.sin(
+                x * 0.085 - 2 * math.pi * phase + y * 0.18
+            )
             intensity = 0.12 + 0.26 * wave
             streams = (
-                0.5 + 0.5 * math.sin(x * 0.16 + y * 0.45 - phase * 4)
+                0.5
+                + 0.5
+                * math.sin(x * 0.16 + y * 0.45 - 4 * math.pi * phase)
             ) ** 5
             intensity += 0.35 * streams
 
             spark = 0.0
             for k, lane in enumerate((0, 15, 1)):
-                travel = t * (10 + _SPEED * 17 + k * 3)
-                head = (travel + k * 19) % 92 - 10
-                if k % 2:
-                    head = WIDTH - 1 - head
-                distance = (head - x) * (-1 if k % 2 else 1)
+                cycles = k + 1
+                head = (WIDTH * (cycles * phase + k / 3)) % WIDTH
+                distance = (
+                    (x - head) % WIDTH
+                    if k % 2
+                    else (head - x) % WIDTH
+                )
                 if y == lane and 0 <= distance < 8:
                     spark = max(
                         spark,
