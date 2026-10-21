@@ -139,6 +139,7 @@ def _run_device(graph: GraphClient, config: AppConfig, stop_event: Event) -> Non
                     except GraphError as error:
                         logger.warning("Calendar refresh failed: %s", error)
                         error_message = error_message or str(error)
+                        meetings = None
                         retry_after = max(retry_after, error.retry_after or 0.0)
 
                 # Keep the last positive on-call presence through transient Graph

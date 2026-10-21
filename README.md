@@ -61,8 +61,8 @@ tenant_id = "your-tenant-id"
 name = "Office BUSY Bar"
 
 [polling]
-presence_seconds = 20.0
-calendar_seconds = 300.0
+presence_seconds = 5.0
+calendar_seconds = 60.0
 display_seconds = 60.0
 lookahead_days = 7
 ```
@@ -129,14 +129,17 @@ Within the final hour the screen redraws every second so the `MM:SS` countdown
 ticks. This is a local redraw only — Microsoft Graph stays on the polling
 intervals below.
 
-Presence is checked every five seconds by default (configurable with
-`presence_seconds` or `--poll-seconds`), and the calendar every five minutes. A
-shorter presence interval reduces the wait after Teams updates presence, though
-Microsoft Graph can still take time to report a change. The
-current screen is redrawn every 60 seconds so a BUSY Bar power cycle recovers
-without restarting this service. A transient Graph failure never clears an
-existing on-call state; the app waits for a positive non-call presence update.
-Microsoft Graph `429` responses honor the service's `Retry-After` value.
+Presence and calendar events are checked every five and 60 seconds, respectively,
+by default. Configure these with `presence_seconds` and `calendar_seconds` (or
+`--poll-seconds` and `--calendar-refresh-seconds`). A shorter interval reduces
+the wait for calendar changes such as deleting a lunch blocker, though Microsoft
+Graph can still take time to report a change. If a calendar refresh fails, the
+app stops using the stale calendar snapshot and shows a sync error until the
+next successful refresh, rather than leaving a lunch animation active
+indefinitely. The current screen is redrawn every 60 seconds so a BUSY Bar power
+cycle recovers without restarting this service. A transient Graph failure never
+clears an existing on-call state; the app waits for a positive non-call presence
+update. Microsoft Graph `429` responses honor the service's `Retry-After` value.
 
 ### Lunch screen
 

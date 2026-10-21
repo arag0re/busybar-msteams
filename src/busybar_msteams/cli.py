@@ -104,7 +104,7 @@ def build_parser(
     parser.add_argument(
         "--calendar-refresh-seconds",
         type=float,
-        default=config_value(config, "polling", "calendar_seconds", 300.0),
+        default=config_value(config, "polling", "calendar_seconds", 60.0),
     )
     parser.add_argument(
         "--display-refresh-seconds",
