@@ -8,6 +8,7 @@ from enum import StrEnum
 
 class ScreenMode(StrEnum):
     ON_CALL = "on_call"
+    LUNCH = "lunch"
     UPCOMING = "upcoming"
     IDLE = "idle"
     ERROR = "error"
@@ -20,6 +21,7 @@ class Meeting:
     start: datetime
     end: datetime
     join_url: str | None = None
+    is_teams_meeting: bool = True
 
 
 @dataclass(frozen=True)
@@ -50,11 +52,14 @@ def select_current_or_next(
     meetings: list[Meeting], now: datetime
 ) -> tuple[Meeting | None, bool]:
     """Return the current meeting, otherwise the next meeting, and whether current."""
-    current = [meeting for meeting in meetings if meeting.start <= now < meeting.end]
+    teams_meetings = [meeting for meeting in meetings if meeting.is_teams_meeting]
+    current = [
+        meeting for meeting in teams_meetings if meeting.start <= now < meeting.end
+    ]
     if current:
         return min(current, key=lambda meeting: meeting.end), True
 
-    upcoming = [meeting for meeting in meetings if meeting.start > now]
+    upcoming = [meeting for meeting in teams_meetings if meeting.start > now]
     if upcoming:
         return min(upcoming, key=lambda meeting: meeting.start), False
     return None, False
@@ -62,14 +67,23 @@ def select_current_or_next(
 
 def next_meeting(meetings: list[Meeting], now: datetime) -> Meeting | None:
     """Return the soonest meeting that has not started yet."""
-    upcoming = [meeting for meeting in meetings if meeting.start > now]
+    upcoming = [
+        meeting
+        for meeting in meetings
+        if meeting.is_teams_meeting and meeting.start > now
+    ]
     if upcoming:
         return min(upcoming, key=lambda meeting: meeting.start)
     return None
 
 
 def build_screen_state(
-    meetings: list[Meeting], presence: TeamsPresence, now: datetime
+    meetings: list[Meeting],
+    presence: TeamsPresence,
+    now: datetime,
+    *,
+    lunch_enabled: bool = False,
+    lunch_name: str = "",
 ) -> ScreenState:
     meeting, is_current = select_current_or_next(meetings, now)
     if presence.is_on_call:
@@ -80,6 +94,19 @@ def build_screen_state(
             meeting=meeting if is_current else None,
             presence=presence,
         )
+    lunch_match = lunch_name.strip().casefold()
+    if lunch_enabled and lunch_match:
+        lunch_event = next(
+            (
+                event
+                for event in meetings
+                if event.start <= now < event.end
+                and lunch_match in event.subject.casefold()
+            ),
+            None,
+        )
+        if lunch_event:
+            return ScreenState(ScreenMode.LUNCH, meeting=lunch_event, presence=presence)
     # A meeting in progress is not worth announcing on its own: it often ends
     # early, so the useful information is always what comes next.
     upcoming = next_meeting(meetings, now)

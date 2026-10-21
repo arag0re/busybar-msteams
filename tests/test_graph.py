@@ -1,6 +1,6 @@
 from datetime import UTC, datetime
 
-from busybar_msteams.graph import parse_event
+from busybar_msteams.graph import parse_calendar_event, parse_event
 
 
 def graph_event(**overrides: object) -> dict[str, object]:
@@ -43,3 +43,23 @@ def test_ignores_declined_cancelled_and_non_teams_events() -> None:
 
 def test_accepts_teams_join_url_when_provider_is_missing() -> None:
     assert parse_event(graph_event(onlineMeetingProvider="unknown")) is not None
+
+
+def test_parses_non_teams_calendar_blocker() -> None:
+    event = parse_calendar_event(
+        graph_event(
+            isOnlineMeeting=False,
+            onlineMeetingProvider="unknown",
+            onlineMeeting=None,
+        )
+    )
+    assert event is not None
+    assert event.subject == "Weekly stand-up"
+    assert not event.is_teams_meeting
+    assert parse_event(
+        graph_event(
+            isOnlineMeeting=False,
+            onlineMeetingProvider="unknown",
+            onlineMeeting=None,
+        )
+    ) is None

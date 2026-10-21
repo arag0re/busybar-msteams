@@ -40,3 +40,25 @@ def test_upcoming_payload_displays_countdown_in_hours() -> None:
     payload = build_payload(state, now).model_dump()
     assert payload["priority"] == DISPLAY_PRIORITY
     assert any(element.get("text") == "NEXT 2.1h" for element in payload["elements"])
+
+
+def test_lunch_payload_uses_stock_firmware_animation() -> None:
+    state = ScreenState(
+        ScreenMode.LUNCH,
+        meeting=Meeting(
+            "lunch",
+            "Lunch break",
+            datetime(2026, 8, 3, 10, tzinfo=UTC),
+            datetime(2026, 8, 3, 11, tzinfo=UTC),
+            is_teams_meeting=False,
+        ),
+    )
+    payload = build_payload(state, datetime(2026, 8, 3, 10, tzinfo=UTC)).model_dump()
+    animation = next(
+        element
+        for element in payload["elements"]
+        if element.get("type") == "animation"
+    )
+    assert animation["stock_path"] == "shared/lunch_72x16.anim"
+    assert animation["section"] == "loop"
+    assert animation["loop"] is True

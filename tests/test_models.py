@@ -43,6 +43,86 @@ def test_scheduled_meeting_does_not_claim_user_is_on_call() -> None:
     assert state.mode is ScreenMode.IDLE
 
 
+def test_matching_current_lunch_blocker_shows_lunch_mode() -> None:
+    blocker = Meeting(
+        event_id="lunch",
+        subject="Lunch break",
+        start=NOW - timedelta(minutes=5),
+        end=NOW + timedelta(minutes=25),
+        is_teams_meeting=False,
+    )
+    state = build_screen_state(
+        [blocker],
+        TeamsPresence("Available", "Available"),
+        NOW,
+        lunch_enabled=True,
+        lunch_name="lunch",
+    )
+    assert state.mode is ScreenMode.LUNCH
+    assert state.meeting is blocker
+
+
+def test_lunch_is_disabled_by_default_and_outside_event_time() -> None:
+    blocker = Meeting(
+        event_id="lunch",
+        subject="Lunch break",
+        start=NOW + timedelta(minutes=1),
+        end=NOW + timedelta(minutes=31),
+        is_teams_meeting=False,
+    )
+    assert (
+        build_screen_state(
+            [blocker], TeamsPresence("Available", "Available"), NOW
+        ).mode
+        is ScreenMode.IDLE
+    )
+    blocker_end = Meeting(
+        event_id="lunch-end",
+        subject="Lunch break",
+        start=NOW - timedelta(minutes=30),
+        end=NOW,
+        is_teams_meeting=False,
+    )
+    assert (
+        build_screen_state(
+            [blocker_end],
+            TeamsPresence("Available", "Available"),
+            NOW,
+            lunch_enabled=True,
+            lunch_name="Lunch",
+        ).mode
+        is ScreenMode.IDLE
+    )
+    assert (
+        build_screen_state(
+            [blocker],
+            TeamsPresence("Available", "Available"),
+            NOW,
+            lunch_enabled=True,
+            lunch_name="lunch",
+        ).mode
+        is ScreenMode.IDLE
+    )
+
+
+def test_live_call_takes_priority_over_lunch_blocker() -> None:
+    blocker = Meeting(
+        event_id="lunch",
+        subject="Lunch break",
+        start=NOW - timedelta(minutes=5),
+        end=NOW + timedelta(minutes=25),
+        is_teams_meeting=False,
+    )
+    state = build_screen_state(
+        [blocker],
+        TeamsPresence("Busy", "InACall"),
+        NOW,
+        lunch_enabled=True,
+        lunch_name="Lunch",
+    )
+    assert state.mode is ScreenMode.ON_CALL
+
+
 def test_meeting_in_progress_is_skipped_for_the_next_one() -> None:
     state = build_screen_state(
         [meeting(-0.5, 0.5), meeting(2, 3)],

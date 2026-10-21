@@ -181,7 +181,7 @@ class GraphClient:
             activity=str(data.get("activity", "presenceUnknown")),
         )
 
-    def get_teams_meetings(
+    def get_calendar_events(
         self, now: datetime, *, lookahead_days: int
     ) -> list[Meeting]:
         start = now.astimezone(UTC) - timedelta(hours=12)
@@ -214,12 +214,12 @@ class GraphClient:
                 raise GraphError("Microsoft Graph returned an invalid calendar page")
             events.extend(page)
 
-        meetings = [
+        events = [
             meeting
             for event in events
-            if isinstance(event, dict) and (meeting := parse_event(event))
+            if isinstance(event, dict) and (meeting := parse_calendar_event(event))
         ]
-        return sorted(meetings, key=lambda meeting: meeting.start)
+        return sorted(events, key=lambda meeting: meeting.start)
 
 
 def parse_graph_datetime(value: object) -> datetime:
@@ -232,7 +232,7 @@ def parse_graph_datetime(value: object) -> datetime:
     return parsed.replace(tzinfo=UTC) if parsed.tzinfo is None else parsed
 
 
-def parse_event(event: dict[str, Any]) -> Meeting | None:
+def parse_calendar_event(event: dict[str, Any]) -> Meeting | None:
     if event.get("isCancelled") or event.get("isAllDay"):
         return None
     response_status = event.get("responseStatus")
@@ -251,14 +251,11 @@ def parse_event(event: dict[str, Any]) -> Meeting | None:
         isinstance(join_url, str)
         and ("teams.microsoft.com/" in join_url or "teams.live.com/" in join_url)
     )
-    if not event.get("isOnlineMeeting") or not is_teams:
-        return None
-
     try:
         start = parse_graph_datetime(event.get("start"))
         end = parse_graph_datetime(event.get("end"))
     except (TypeError, ValueError):
-        logger.warning("Skipping a Teams event with invalid dates")
+        logger.warning("Skipping a calendar event with invalid dates")
         return None
     if end <= start:
         return None
@@ -268,4 +265,11 @@ def parse_event(event: dict[str, Any]) -> Meeting | None:
         start=start,
         end=end,
         join_url=join_url if isinstance(join_url, str) else None,
+        is_teams_meeting=bool(event.get("isOnlineMeeting") and is_teams),
     )
+
+
+def parse_event(event: dict[str, Any]) -> Meeting | None:
+    """Parse only Teams online meetings for callers that need Teams events."""
+    meeting = parse_calendar_event(event)
+    return meeting if meeting and meeting.is_teams_meeting else None

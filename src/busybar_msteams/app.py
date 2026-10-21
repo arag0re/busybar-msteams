@@ -35,6 +35,8 @@ class AppConfig:
     calendar_refresh_seconds: float
     display_refresh_seconds: float
     lookahead_days: int
+    lunch_enabled: bool = False
+    lunch_name: str = "Lunch"
     once: bool = False
     dry_run: bool = False
     clear_on_exit: bool = True
@@ -59,8 +61,14 @@ def run(config: AppConfig, *, stop_event: Event | None = None) -> None:
 def _run_dry(graph: GraphClient, config: AppConfig) -> None:
     now = datetime.now(UTC)
     presence = graph.get_presence()
-    meetings = graph.get_teams_meetings(now, lookahead_days=config.lookahead_days)
-    state = build_screen_state(meetings, presence, now)
+    meetings = graph.get_calendar_events(now, lookahead_days=config.lookahead_days)
+    state = build_screen_state(
+        meetings,
+        presence,
+        now,
+        lunch_enabled=config.lunch_enabled,
+        lunch_name=config.lunch_name,
+    )
     print(build_payload(state, now).model_dump_json(indent=2))
 
 
@@ -122,7 +130,7 @@ def _run_device(graph: GraphClient, config: AppConfig, stop_event: Event) -> Non
 
                 if now >= next_calendar_refresh:
                     try:
-                        meetings = graph.get_teams_meetings(
+                        meetings = graph.get_calendar_events(
                             now, lookahead_days=config.lookahead_days
                         )
                         next_calendar_refresh = now + timedelta(
@@ -139,7 +147,13 @@ def _run_device(graph: GraphClient, config: AppConfig, stop_event: Event) -> Non
                 if presence is not None and (
                     meetings is not None or presence.is_on_call
                 ):
-                    state = build_screen_state(meetings or [], presence, now)
+                    state = build_screen_state(
+                        meetings or [],
+                        presence,
+                        now,
+                        lunch_enabled=config.lunch_enabled,
+                        lunch_name=config.lunch_name,
+                    )
                 else:
                     state = ScreenState(
                         ScreenMode.ERROR,
@@ -155,10 +169,7 @@ def _run_device(graph: GraphClient, config: AppConfig, stop_event: Event) -> Non
                     next_display_refresh = now + timedelta(
                         seconds=config.display_refresh_seconds
                     )
-                    if last_drawn_mode is None or (
-                        (last_drawn_mode is ScreenMode.ON_CALL)
-                        != (state.mode is ScreenMode.ON_CALL)
-                    ):
+                    if last_drawn_mode is not state.mode:
                         try:
                             device.display_clear(application_name=APP_NAME)
                         except exceptions.BusyBarError as error:

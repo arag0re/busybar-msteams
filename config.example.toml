@@ -17,6 +17,10 @@ calendar_seconds = 300.0
 display_seconds = 60.0
 lookahead_days = 7
 
+[lunch]
+enabled = false
+name = "Lunch"
+
 [app]
 clear_on_exit = true
 log_level = "INFO"

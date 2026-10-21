@@ -26,6 +26,10 @@ lookahead_days = 14
 [app]
 clear_on_exit = false
 log_level = "WARNING"
+
+[lunch]
+enabled = true
+name = "Lunch break"
 """.strip(),
         encoding="utf-8",
     )
@@ -50,6 +54,8 @@ def test_config_file_populates_app_config(
     assert config.calendar_refresh_seconds == 600.0
     assert config.display_refresh_seconds == 90.0
     assert config.lookahead_days == 14
+    assert config.lunch_enabled
+    assert config.lunch_name == "Lunch break"
     assert not config.clear_on_exit
     assert log_level == "WARNING"
 

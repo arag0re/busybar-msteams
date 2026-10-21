@@ -14,6 +14,7 @@ ALLOWED_KEYS = {
         "lookahead_days",
     },
     "app": {"clear_on_exit", "log_level", "ipv4_only"},
+    "lunch": {"enabled", "name"},
 }
 EXPECTED_TYPES: dict[tuple[str, str], type | tuple[type, ...]] = {
     ("microsoft", "client_id"): str,
@@ -30,6 +31,8 @@ EXPECTED_TYPES: dict[tuple[str, str], type | tuple[type, ...]] = {
     ("app", "clear_on_exit"): bool,
     ("app", "log_level"): str,
     ("app", "ipv4_only"): bool,
+    ("lunch", "enabled"): bool,
+    ("lunch", "name"): str,
 }
 
 

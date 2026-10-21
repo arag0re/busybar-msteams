@@ -183,6 +183,10 @@ def parse_config(argv: list[str] | None = None) -> tuple[AppConfig, str]:
         parser.error("--display-refresh-seconds must be at least --poll-seconds")
     if not 1 <= args.lookahead_days <= 30:
         parser.error("--lookahead-days must be between 1 and 30")
+    lunch_enabled = config_value(file_config, "lunch", "enabled", False)
+    lunch_name = config_value(file_config, "lunch", "name", "Lunch")
+    if lunch_enabled and not lunch_name.strip():
+        parser.error("[lunch].name must not be empty when lunch is enabled")
 
     return (
         AppConfig(
@@ -197,6 +201,8 @@ def parse_config(argv: list[str] | None = None) -> tuple[AppConfig, str]:
             calendar_refresh_seconds=args.calendar_refresh_seconds,
             display_refresh_seconds=args.display_refresh_seconds,
             lookahead_days=args.lookahead_days,
+            lunch_enabled=lunch_enabled,
+            lunch_name=lunch_name,
             once=args.once,
             dry_run=args.dry_run,
             clear_on_exit=args.clear_on_exit,

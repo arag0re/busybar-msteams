@@ -115,6 +115,7 @@ prompts for it at startup. The value is used for that run only and is not saved.
 | Teams state | Front display | Meaning |
 | --- | --- | --- |
 | Live call or presenting | Stock animated `ON CALL` screen with microphone | Do not disturb |
+| Current matching lunch blocker | Stock animated `LUNCH` screen | Lunch |
 | Teams meeting an hour or more away | `NEXT 1.3h` in blue | Hours until start |
 | Teams meeting under an hour away | `NEXT 5:30` in blue | Minutes and seconds until start |
 | No Teams meetings in the next 7 days | `NO CALLS` | Idle |
@@ -136,6 +137,23 @@ current screen is redrawn every 60 seconds so a BUSY Bar power cycle recovers
 without restarting this service. A transient Graph failure never clears an
 existing on-call state; the app waits for a positive non-call presence update.
 Microsoft Graph `429` responses honor the service's `Retry-After` value.
+
+### Lunch screen
+
+Enable the optional lunch screen in `config.toml` and set the text to find in
+the calendar event subject:
+
+```toml
+[lunch]
+enabled = true
+name = "Lunch"
+```
+
+Matching is case-insensitive and checks whether the configured name appears in
+the subject, so `"Lunch"` matches an event named `"Lunch break"`. The firmware's
+stock lunch animation runs only while the matching calendar event is in
+progress; it stops at the event's end time. Active Teams calls take priority.
+Lunch is disabled by default.
 
 Useful commands:
 
