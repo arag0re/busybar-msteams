@@ -8,6 +8,10 @@ from threading import Event
 
 from busylib import BusyBar, exceptions
 
+from busybar_msteams.countdown_animation import (
+    ANIMATION_FILENAME,
+    build_countdown_animation,
+)
 from busybar_msteams.discovery import resolve_access_token, resolve_device
 from busybar_msteams.display import APP_NAME, build_payload
 from busybar_msteams.graph import GraphClient, GraphError, TokenProvider
@@ -73,7 +77,7 @@ def _run_dry(graph: GraphClient, config: AppConfig) -> None:
 
 
 def _needs_secondly_refresh(state: ScreenState, now: datetime) -> bool:
-    """Keep countdown text and its blue pulse animation moving."""
+    """Keep the countdown text current while a meeting is upcoming."""
     if state.mode is not ScreenMode.UPCOMING or state.meeting is None:
         return False
     return state.meeting.start > now
@@ -86,6 +90,7 @@ def _run_device(graph: GraphClient, config: AppConfig, stop_event: Event) -> Non
     next_presence_refresh = datetime.min.replace(tzinfo=UTC)
     last_payload: str | None = None
     last_drawn_mode: ScreenMode | None = None
+    countdown_asset_uploaded = False
     retry_after = 0.0
     next_display_refresh = datetime.min.replace(tzinfo=UTC)
     device_host = resolve_device(
@@ -180,6 +185,16 @@ def _run_device(graph: GraphClient, config: AppConfig, stop_event: Event) -> Non
                                 error,
                             )
                     try:
+                        if (
+                            state.mode is ScreenMode.UPCOMING
+                            and not countdown_asset_uploaded
+                        ):
+                            device.assets_upload(
+                                APP_NAME,
+                                ANIMATION_FILENAME,
+                                build_countdown_animation(),
+                            )
+                            countdown_asset_uploaded = True
                         device.display_draw(payload, sanitize_text=True)
                         last_payload = serialized
                         last_drawn_mode = state.mode

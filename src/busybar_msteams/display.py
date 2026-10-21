@@ -4,6 +4,7 @@ from datetime import datetime
 
 from busylib import types
 
+from busybar_msteams.countdown_animation import ANIMATION_FILENAME
 from busybar_msteams.models import ScreenMode, ScreenState, format_countdown
 
 APP_NAME = "busybar-msteams"
@@ -18,8 +19,6 @@ COLORS = {
     ScreenMode.IDLE: ("#123524FF", "#FFFFFFFF"),
     ScreenMode.ERROR: ("#7A2400FF", "#FFFFFFFF"),
 }
-
-UPCOMING_PULSE_COLORS = ("#00508FFF", "#0067B8FF")
 
 
 def build_payload(state: ScreenState, now: datetime) -> types.DisplayElements:
@@ -91,10 +90,33 @@ def build_payload(state: ScreenState, now: datetime) -> types.DisplayElements:
                 display=types.DisplayName.FRONT,
             )
         )
+    elif state.mode is ScreenMode.UPCOMING:
+        elements.extend(
+            [
+                types.AnimationElement(
+                    id="front-upcoming-animation",
+                    type="animation",
+                    path=ANIMATION_FILENAME,
+                    section="default",
+                    loop=True,
+                    z_index=0,
+                    display=types.DisplayName.FRONT,
+                ),
+                types.TextElement(
+                    id="front-status",
+                    type="text",
+                    x=36,
+                    y=8,
+                    align="center",
+                    text=front,
+                    font="bold",
+                    color=foreground,
+                    z_index=10,
+                    display=types.DisplayName.FRONT,
+                ),
+            ]
+        )
     else:
-        front_background = background
-        if state.mode is ScreenMode.UPCOMING:
-            front_background = UPCOMING_PULSE_COLORS[(now.second // 2) % 2]
         elements.extend(
             [
                 types.RectangleElement(
@@ -105,9 +127,9 @@ def build_payload(state: ScreenState, now: datetime) -> types.DisplayElements:
                     width=72,
                     height=16,
                     fill="solid",
-                    fill_colors=[front_background],
+                    fill_colors=[background],
                     border_width=0,
-                    border_color=front_background,
+                    border_color=background,
                     display=types.DisplayName.FRONT,
                 ),
                 types.TextElement(
@@ -117,7 +139,7 @@ def build_payload(state: ScreenState, now: datetime) -> types.DisplayElements:
                     y=8,
                     align="center",
                     text=front,
-                    font="bold" if state.mode is ScreenMode.UPCOMING else "normal",
+                    font="normal",
                     color=foreground,
                     display=types.DisplayName.FRONT,
                 ),

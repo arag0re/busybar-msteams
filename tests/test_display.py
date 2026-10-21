@@ -1,5 +1,10 @@
 from datetime import UTC, datetime, timedelta
+import struct
 
+from busybar_msteams.countdown_animation import (
+    ANIMATION_FILENAME,
+    build_countdown_animation,
+)
 from busybar_msteams.display import (
     ANIMATION_PRIORITY,
     STATIC_DISPLAY_PRIORITY,
@@ -48,34 +53,61 @@ def test_upcoming_payload_displays_countdown_in_hours() -> None:
         for element in payload["elements"]
         if element.get("id") == "front-status"
     )
-    front_background = next(
+    animation = next(
         element
         for element in payload["elements"]
-        if element.get("id") == "front-background"
+        if element.get("id") == "front-upcoming-animation"
     )
     assert front_text["text"] == "NEXT 2.1h"
     assert front_text["font"] == "bold"
-    assert front_background["fill_colors"] == ["#00508FFF"]
+    assert front_text["z_index"] == 10
+    assert animation["type"] == "animation"
+    assert animation["path"] == ANIMATION_FILENAME
+    assert animation["section"] == "default"
+    assert animation["loop"] is True
+    assert animation["z_index"] == 0
 
 
-def test_upcoming_countdown_pulses_between_blue_shades() -> None:
-    now = datetime(2026, 8, 3, 10, tzinfo=UTC)
-    state = ScreenState(
-        ScreenMode.UPCOMING,
-        meeting=Meeting(
-            "1",
-            "Roadmap",
-            now + timedelta(hours=2),
-            now + timedelta(hours=3),
-        ),
-    )
-    payload = build_payload(state, now.replace(second=2)).model_dump()
-    front_background = next(
-        element
-        for element in payload["elements"]
-        if element.get("id") == "front-background"
-    )
-    assert front_background["fill_colors"] == ["#0067B8FF"]
+def test_countdown_animation_is_native_72_by_16_loop() -> None:
+    animation = build_countdown_animation()
+    header = struct.unpack_from("<8sBBBBBHxIIIII", animation)
+
+    assert header[0] == b"bicycle0"
+    assert (header[2], header[3], header[5]) == (72, 16, 25)
+    assert header[-2:] == (45, 45)
+    frame_offset = 36 + header[7]
+    assert frame_offset + header[8] == len(animation)
+
+    offset = frame_offset
+    total_duration = 0
+    for _ in range(header[10]):
+        encoding, duration, data_length = struct.unpack_from("<BBH", animation, offset)
+        offset += 4
+        frame_data = animation[offset : offset + data_length]
+        offset += data_length
+        assert duration > 0
+        if encoding == 0:
+            assert data_length == 72 * 16 * 4
+        else:
+            decoded = bytearray()
+            cursor = 0
+            while cursor < len(frame_data):
+                opcode = frame_data[cursor]
+                cursor += 1
+                block_count = opcode & 0x7F
+                if opcode & 0x80:
+                    size = block_count * 4
+                    decoded.extend(frame_data[cursor : cursor + size])
+                    cursor += size
+                else:
+                    block = frame_data[cursor : cursor + 4]
+                    decoded.extend(block * block_count)
+                    cursor += 4
+            assert len(decoded) == 72 * 16 * 4
+        total_duration += duration
+
+    assert offset == len(animation)
+    assert total_duration == 45
 
 
 def test_lunch_payload_uses_stock_firmware_animation() -> None:

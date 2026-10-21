@@ -117,8 +117,8 @@ prompts for it at startup. The value is used for that run only and is not saved.
 | Live call or presenting | Stock animated `ON CALL` screen with microphone | Do not disturb |
 | Current matching lunch blocker | Stock animated `LUNCH` screen | Lunch |
 | Current calendar event without a live call | Stock animated `MEETING` screen | Scheduled meeting |
-| Teams meeting an hour or more away | Bold `NEXT 1.3h` with a pulsing blue background | Hours until start |
-| Teams meeting under an hour away | Bold `NEXT 5:30` with a pulsing blue background | Minutes and seconds until start |
+| Teams meeting an hour or more away | Bold `NEXT 1.3h` over animated blue racing currents | Hours until start |
+| Teams meeting under an hour away | Bold `NEXT 5:30` over animated blue racing currents | Minutes and seconds until start |
 | No Teams meetings in the next 7 days | `NO CALLS` | Idle |
 
 When a calendar event is in progress and no live call or matching lunch blocker
@@ -126,10 +126,13 @@ takes priority, the bar uses the built-in `meeting_72x16.anim` firmware asset.
 Upcoming Teams meetings continue to show a countdown. The on-call and lunch
 screens also use their built-in firmware animations.
 
-Within the final hour the screen redraws every second so the `MM:SS` countdown
-ticks. The blue countdown screen also gently pulses while a future meeting is
-selected. These are local redraws only — Microsoft Graph stays on the polling
-intervals below.
+The countdown background uses a native BUSY Bar animation adapted from the
+blue racing-current effect in
+[wowlocal/busy-codex](https://github.com/wowlocal/busy-codex); the live countdown
+is drawn over it. The animation is uploaded to the bar the first time it is
+needed. The screen redraws every second while a future meeting is selected so
+the countdown stays current. These are local redraws only — Microsoft Graph
+stays on the polling intervals below.
 
 Presence and calendar events are checked every five and 60 seconds, respectively,
 by default. Configure these with `presence_seconds` and `calendar_seconds` (or
