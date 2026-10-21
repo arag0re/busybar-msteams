@@ -4,7 +4,7 @@ from busybar_msteams.display import build_payload
 from busybar_msteams.models import Meeting, ScreenMode, ScreenState, TeamsPresence
 
 
-def test_on_call_payload_has_animated_mic_and_on_call_message() -> None:
+def test_on_call_payload_uses_stock_firmware_animation() -> None:
     now = datetime(2026, 8, 3, 10, tzinfo=UTC)
     state = ScreenState(
         ScreenMode.ON_CALL,
@@ -14,22 +14,14 @@ def test_on_call_payload_has_animated_mic_and_on_call_message() -> None:
     dumped = payload.model_dump()
     assert dumped["priority"] == 90
     assert dumped["led_notification_color"] == "#B00020FF"
-    assert any(element.get("text") == "ON CALL" for element in dumped["elements"])
-    assert any(
-        element.get("id") == "front-microphone-head"
+    animation = next(
+        element
         for element in dumped["elements"]
+        if element.get("type") == "animation"
     )
-
-    next_frame = build_payload(state, now + timedelta(seconds=1)).model_dump()
-
-    def colors(payload: dict) -> list[str]:
-        return [
-            element["fill_colors"][0]
-            for element in payload["elements"]
-            if element.get("id", "").startswith("front-dot-")
-        ]
-
-    assert colors(dumped) != colors(next_frame)
+    assert animation["stock_path"] == "shared/on_call_72x16.anim"
+    assert animation["section"] == "loop"
+    assert animation["loop"] is True
 
 
 def test_upcoming_payload_displays_countdown_in_hours() -> None:

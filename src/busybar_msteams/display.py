@@ -45,115 +45,15 @@ def build_payload(state: ScreenState, now: datetime) -> types.DisplayElements:
 
     elements: list[types.DisplayElement] = []
     if on_call:
-        palette = (
-            "#FF2600FF",
-            "#FF4A00FF",
-            "#FF7400FF",
-            "#FF9A00FF",
-            "#FF7400FF",
-            "#FF4A00FF",
-        )
-        phase = int(now.timestamp()) % len(palette)
         elements.append(
-            types.RectangleElement(
-                id="front-background",
-                type="rectangle",
-                x=0,
-                y=0,
-                width=72,
-                height=16,
-                fill="solid",
-                fill_colors=[palette[0]],
-                border_width=0,
-                border_color=palette[0],
+            types.AnimationElement(
+                id="front-status",
+                type="animation",
+                stock_path="shared/on_call_72x16.anim",
+                section="loop",
+                loop=True,
                 display=types.DisplayName.FRONT,
             )
-        )
-        elements.extend(
-            types.RectangleElement(
-                id=f"front-dot-{row}-{column}",
-                type="rectangle",
-                x=column * 4 + 1,
-                y=row * 4 + 1,
-                width=2,
-                height=2,
-                fill="solid",
-                fill_colors=[
-                    palette[(column + row * 2 + phase) % len(palette)]
-                ],
-                border_width=0,
-                border_color=palette[(column + row * 2 + phase) % len(palette)],
-                display=types.DisplayName.FRONT,
-            )
-            for row in range(4)
-            for column in range(18)
-        )
-        elements.extend(
-            [
-                types.RectangleElement(
-                    id="front-microphone-head",
-                    type="rectangle",
-                    x=8,
-                    y=2,
-                    width=6,
-                    height=8,
-                    fill="solid",
-                    fill_colors=[foreground],
-                    border_width=0,
-                    border_color=foreground,
-                    display=types.DisplayName.FRONT,
-                ),
-                types.RectangleElement(
-                    id="front-microphone-grille",
-                    type="rectangle",
-                    x=10,
-                    y=4,
-                    width=2,
-                    height=4,
-                    fill="solid",
-                    fill_colors=[palette[(phase + 2) % len(palette)]],
-                    border_width=0,
-                    border_color=palette[(phase + 2) % len(palette)],
-                    display=types.DisplayName.FRONT,
-                ),
-                types.RectangleElement(
-                    id="front-microphone-stem",
-                    type="rectangle",
-                    x=10,
-                    y=10,
-                    width=2,
-                    height=2,
-                    fill="solid",
-                    fill_colors=[foreground],
-                    border_width=0,
-                    border_color=foreground,
-                    display=types.DisplayName.FRONT,
-                ),
-                types.RectangleElement(
-                    id="front-microphone-base",
-                    type="rectangle",
-                    x=7,
-                    y=12,
-                    width=8,
-                    height=1,
-                    fill="solid",
-                    fill_colors=[foreground],
-                    border_width=0,
-                    border_color=foreground,
-                    display=types.DisplayName.FRONT,
-                ),
-                types.TextElement(
-                    id="front-status",
-                    type="text",
-                    x=47,
-                    y=8,
-                    align="center",
-                    text=front,
-                    font="normal",
-                    color=foreground,
-                    display=types.DisplayName.FRONT,
-                ),
-            ]
         )
     else:
         elements.extend(

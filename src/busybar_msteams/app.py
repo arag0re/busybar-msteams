@@ -164,13 +164,9 @@ def _run_device(graph: GraphClient, config: AppConfig, stop_event: Event) -> Non
 
                 if config.once:
                     break
-                # Redraw once a second for the on-call animation and ticking
-                # countdown; Graph stays on its own slower refresh schedule.
-                delay = (
-                    1.0
-                    if state.mode is ScreenMode.ON_CALL or _is_ticking(state, now)
-                    else config.poll_seconds
-                )
+                # The stock on-call animation loops on the bar; only the
+                # countdown needs a one-second display refresh.
+                delay = 1.0 if _is_ticking(state, now) else config.poll_seconds
                 delay = max(delay, retry_after)
                 retry_after = 0.0
                 stop_event.wait(delay)
