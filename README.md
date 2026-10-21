@@ -128,7 +128,10 @@ Within the final hour the screen redraws every second so the `MM:SS` countdown
 ticks. This is a local redraw only — Microsoft Graph stays on the polling
 intervals below.
 
-Presence is checked every 20 seconds and the calendar every five minutes. The
+Presence is checked every five seconds by default (configurable with
+`presence_seconds` or `--poll-seconds`), and the calendar every five minutes. A
+shorter presence interval reduces the wait after Teams updates presence, though
+Microsoft Graph can still take time to report a change. The
 current screen is redrawn every 60 seconds so a BUSY Bar power cycle recovers
 without restarting this service. A transient Graph failure never clears an
 existing on-call state; the app waits for a positive non-call presence update.

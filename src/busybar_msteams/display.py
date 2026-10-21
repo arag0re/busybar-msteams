@@ -7,6 +7,7 @@ from busylib import types
 from busybar_msteams.models import ScreenMode, ScreenState, format_countdown
 
 APP_NAME = "busybar-msteams"
+DISPLAY_PRIORITY = 90
 
 COLORS = {
     ScreenMode.ON_CALL: ("#B00020FF", "#FFFFFFFF"),
@@ -47,7 +48,7 @@ def build_payload(state: ScreenState, now: datetime) -> types.DisplayElements:
     if on_call:
         elements.append(
             types.AnimationElement(
-                id="front-status",
+                id="front-on-call-animation",
                 type="animation",
                 stock_path="shared/on_call_72x16.anim",
                 section="loop",
@@ -139,7 +140,7 @@ def build_payload(state: ScreenState, now: datetime) -> types.DisplayElements:
     )
     return types.DisplayElements(
         application_name=APP_NAME,
-        priority=90 if state.mode is ScreenMode.ON_CALL else 50,
+        priority=DISPLAY_PRIORITY,
         led_notification_color=background,
         elements=elements,
     )

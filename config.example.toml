@@ -12,7 +12,7 @@ discovery_timeout = 1.5
 # token = "1234"
 
 [polling]
-presence_seconds = 20.0
+presence_seconds = 5.0
 calendar_seconds = 300.0
 display_seconds = 60.0
 lookahead_days = 7

@@ -77,6 +77,7 @@ def _run_device(graph: GraphClient, config: AppConfig, stop_event: Event) -> Non
     next_calendar_refresh = datetime.min.replace(tzinfo=UTC)
     next_presence_refresh = datetime.min.replace(tzinfo=UTC)
     last_payload: str | None = None
+    last_drawn_mode: ScreenMode | None = None
     retry_after = 0.0
     next_display_refresh = datetime.min.replace(tzinfo=UTC)
     device_host = resolve_device(
@@ -154,9 +155,22 @@ def _run_device(graph: GraphClient, config: AppConfig, stop_event: Event) -> Non
                     next_display_refresh = now + timedelta(
                         seconds=config.display_refresh_seconds
                     )
+                    if last_drawn_mode is None or (
+                        (last_drawn_mode is ScreenMode.ON_CALL)
+                        != (state.mode is ScreenMode.ON_CALL)
+                    ):
+                        try:
+                            device.display_clear(application_name=APP_NAME)
+                        except exceptions.BusyBarError as error:
+                            logger.warning(
+                                "Could not clear the previous BUSY Bar screen; "
+                                "will redraw: %s",
+                                error,
+                            )
                     try:
                         device.display_draw(payload, sanitize_text=True)
                         last_payload = serialized
+                        last_drawn_mode = state.mode
                         action = "updated" if payload_changed else "refreshed"
                         logger.info("BUSY Bar screen %s: %s", action, state.mode.value)
                     except exceptions.BusyBarError as error:
