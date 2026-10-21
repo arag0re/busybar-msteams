@@ -12,7 +12,7 @@ import struct
 WIDTH = 72
 HEIGHT = 16
 FPS = 25
-FRAME_COUNT = 45
+FRAME_COUNT = 125
 ANIMATION_FILENAME = "upcoming_countdown.anim"
 _BASE = (4, 16, 48)
 _ACCENT = (35, 100, 245)
@@ -34,23 +34,21 @@ def _frame(frame_index: int) -> bytes:
             streams = (
                 0.5
                 + 0.5
-                * math.sin(x * 0.16 + y * 0.45 - 4 * math.pi * phase)
+                * math.sin(x * 0.16 + y * 0.45 - 2 * math.pi * phase)
             ) ** 5
             intensity += 0.35 * streams
 
             spark = 0.0
             for k, lane in enumerate((0, 15, 1)):
-                cycles = k + 1
-                head = (WIDTH * (cycles * phase + k / 3)) % WIDTH
-                distance = (
-                    (x - head) % WIDTH
-                    if k % 2
-                    else (head - x) % WIDTH
+                head = WIDTH / 2 + (WIDTH / 2 - 8) * math.sin(
+                    2 * math.pi * phase + k * 2 * math.pi / 3
                 )
-                if y == lane and 0 <= distance < 8:
+                distance = math.hypot(x - head, y - lane)
+                if distance < 12:
                     spark = max(
                         spark,
-                        (1 - distance / 8) ** 2 * (0.2 + _EFFECT_RANK * 0.11),
+                        math.exp(-((distance / 4) ** 2))
+                        * (0.2 + _EFFECT_RANK * 0.11),
                     )
 
             rgb = tuple(

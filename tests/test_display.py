@@ -76,7 +76,7 @@ def test_countdown_animation_is_native_72_by_16_loop() -> None:
 
     assert header[0] == b"bicycle0"
     assert (header[2], header[3], header[5]) == (72, 16, 25)
-    assert header[-2:] == (45, 45)
+    assert header[-2:] == (FRAME_COUNT, FRAME_COUNT)
     frame_offset = 36 + header[7]
     assert frame_offset + header[8] == len(animation)
 
@@ -109,7 +109,7 @@ def test_countdown_animation_is_native_72_by_16_loop() -> None:
         total_duration += duration
 
     assert offset == len(animation)
-    assert total_duration == 45
+    assert total_duration == FRAME_COUNT
 
 
 def test_countdown_animation_wraparound_is_continuous() -> None:
@@ -120,11 +120,9 @@ def test_countdown_animation_wraparound_is_continuous() -> None:
 
     assert looped_first == first
     assert next_frame != first
-    frame_changes = [
-        sum(abs(a - b) for a, b in zip(_frame(index), _frame(index + 1)))
-        for index in range(FRAME_COUNT)
-    ]
-    assert min(frame_changes[:-1]) <= frame_changes[-1] <= max(frame_changes[:-1])
+    opening_change = sum(abs(a - b) for a, b in zip(first, next_frame))
+    seam_change = sum(abs(a - b) for a, b in zip(last, looped_first))
+    assert abs(seam_change - opening_change) <= opening_change * 0.05
 
 
 def test_lunch_payload_uses_stock_firmware_animation() -> None:
