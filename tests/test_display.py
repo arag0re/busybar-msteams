@@ -12,7 +12,7 @@ def test_on_call_payload_uses_stock_firmware_animation() -> None:
     )
     payload = build_payload(state, now)
     dumped = payload.model_dump()
-    assert dumped["priority"] == DISPLAY_PRIORITY
+    assert dumped["priority"] == DISPLAY_PRIORITY == 100
     assert dumped["led_notification_color"] == "#B00020FF"
     animation = next(
         element

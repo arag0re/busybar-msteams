@@ -7,7 +7,7 @@ from busylib import types
 from busybar_msteams.models import ScreenMode, ScreenState, format_countdown
 
 APP_NAME = "busybar-msteams"
-DISPLAY_PRIORITY = 90
+DISPLAY_PRIORITY = 100
 
 COLORS = {
     ScreenMode.ON_CALL: ("#B00020FF", "#FFFFFFFF"),
