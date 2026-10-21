@@ -19,6 +19,8 @@ COLORS = {
     ScreenMode.ERROR: ("#7A2400FF", "#FFFFFFFF"),
 }
 
+UPCOMING_PULSE_COLORS = ("#00508FFF", "#0067B8FF")
+
 
 def build_payload(state: ScreenState, now: datetime) -> types.DisplayElements:
     background, foreground = COLORS[state.mode]
@@ -90,6 +92,9 @@ def build_payload(state: ScreenState, now: datetime) -> types.DisplayElements:
             )
         )
     else:
+        front_background = background
+        if state.mode is ScreenMode.UPCOMING:
+            front_background = UPCOMING_PULSE_COLORS[(now.second // 2) % 2]
         elements.extend(
             [
                 types.RectangleElement(
@@ -100,9 +105,9 @@ def build_payload(state: ScreenState, now: datetime) -> types.DisplayElements:
                     width=72,
                     height=16,
                     fill="solid",
-                    fill_colors=[background],
+                    fill_colors=[front_background],
                     border_width=0,
-                    border_color=background,
+                    border_color=front_background,
                     display=types.DisplayName.FRONT,
                 ),
                 types.TextElement(
@@ -112,7 +117,7 @@ def build_payload(state: ScreenState, now: datetime) -> types.DisplayElements:
                     y=8,
                     align="center",
                     text=front,
-                    font="normal",
+                    font="bold" if state.mode is ScreenMode.UPCOMING else "normal",
                     color=foreground,
                     display=types.DisplayName.FRONT,
                 ),

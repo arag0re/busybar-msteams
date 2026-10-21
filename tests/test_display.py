@@ -43,7 +43,39 @@ def test_upcoming_payload_displays_countdown_in_hours() -> None:
     )
     payload = build_payload(state, now).model_dump()
     assert payload["priority"] == STATIC_DISPLAY_PRIORITY
-    assert any(element.get("text") == "NEXT 2.1h" for element in payload["elements"])
+    front_text = next(
+        element
+        for element in payload["elements"]
+        if element.get("id") == "front-status"
+    )
+    front_background = next(
+        element
+        for element in payload["elements"]
+        if element.get("id") == "front-background"
+    )
+    assert front_text["text"] == "NEXT 2.1h"
+    assert front_text["font"] == "bold"
+    assert front_background["fill_colors"] == ["#00508FFF"]
+
+
+def test_upcoming_countdown_pulses_between_blue_shades() -> None:
+    now = datetime(2026, 8, 3, 10, tzinfo=UTC)
+    state = ScreenState(
+        ScreenMode.UPCOMING,
+        meeting=Meeting(
+            "1",
+            "Roadmap",
+            now + timedelta(hours=2),
+            now + timedelta(hours=3),
+        ),
+    )
+    payload = build_payload(state, now.replace(second=2)).model_dump()
+    front_background = next(
+        element
+        for element in payload["elements"]
+        if element.get("id") == "front-background"
+    )
+    assert front_background["fill_colors"] == ["#0067B8FF"]
 
 
 def test_lunch_payload_uses_stock_firmware_animation() -> None:

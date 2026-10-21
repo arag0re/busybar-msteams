@@ -72,11 +72,11 @@ def _run_dry(graph: GraphClient, config: AppConfig) -> None:
     print(build_payload(state, now).model_dump_json(indent=2))
 
 
-def _is_ticking(state: ScreenState, now: datetime) -> bool:
-    """True while the next meeting is inside the MM:SS countdown window."""
+def _needs_secondly_refresh(state: ScreenState, now: datetime) -> bool:
+    """Keep countdown text and its blue pulse animation moving."""
     if state.mode is not ScreenMode.UPCOMING or state.meeting is None:
         return False
-    return 0 < (state.meeting.start - now).total_seconds() < 3600
+    return state.meeting.start > now
 
 
 def _run_device(graph: GraphClient, config: AppConfig, stop_event: Event) -> None:
@@ -190,9 +190,11 @@ def _run_device(graph: GraphClient, config: AppConfig, stop_event: Event) -> Non
 
                 if config.once:
                     break
-                # The stock on-call animation loops on the bar; only the
-                # countdown needs a one-second display refresh.
-                delay = 1.0 if _is_ticking(state, now) else config.poll_seconds
+                delay = (
+                    1.0
+                    if _needs_secondly_refresh(state, now)
+                    else config.poll_seconds
+                )
                 delay = max(delay, retry_after)
                 retry_after = 0.0
                 stop_event.wait(delay)
